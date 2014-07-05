@@ -7,4 +7,4 @@ Site with identical headers are merged in the output.
 
 Usage
 =====
-$ ./headerget.py <targetlist>
+$ ./headerget.py \<targetlist\>
