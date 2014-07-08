@@ -36,7 +36,7 @@ for target in targets:
         sys.stdout.write(target + "                                        \r")
         sys.stdout.flush()
     try:
-        r = requests.head(target, timeout=2)
+        r = requests.head(target, timeout=2, verify=False)
     except KeyboardInterrupt:
         print("Caught KeyboardInterrupt, quitting...")
         sys.exit(1)
