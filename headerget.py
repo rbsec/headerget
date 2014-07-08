@@ -6,6 +6,7 @@
 # Usage: $ ./headerget.py <targetfile>
 #
 
+import os
 import requests
 import sys
 
@@ -13,8 +14,8 @@ targets = {}
 try:
     with open(sys.argv[1]) as f:
         lines = f.readlines()
-except IOError:
-    print("Usage $ ./headerget.py <targetfile>")
+except:
+    print("\nUsage: $ " + sys.argv[0] + " <targetfile>\n")
     sys.exit(1)
 
 for line in lines:
@@ -23,7 +24,8 @@ for line in lines:
     targets[line.rstrip()] = ""
 
 try:
-    boringheaders = open("boringheaders.txt").read().splitlines()
+    path = os.path.dirname(os.path.realpath(__file__)) + "/boringheaders.txt"
+    boringheaders = open(path).read().splitlines()
 except IOError:
     print("File boringheaders.txt not found")
     sys.exit(1)
