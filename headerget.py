@@ -4,7 +4,7 @@
 # Common headers are ignored, so only version or interesting ones are shown
 # Sites with the same headers are merged in the output
 # Usage: $ ./headerget.py <targetfile>
-# Target file can be nmap XML output (use service detection with XML)
+# Target file can be nmap or servicescan XML output (use service detection with XML)
 # Otherwise target file can be plain text, with one target per line
 #
 
@@ -16,7 +16,7 @@ from xml.dom import minidom
 
 # Parse Nmap XML file
 def xmlparse_nmap(xmldoc):
-    hostlist = xmldoc.getElementsByTagName("host") 
+    hostlist = xmldoc.getElementsByTagName("host")
     for hostNode in hostlist :
         addressNode = hostNode.getElementsByTagName("address")
         host = addressNode[0].attributes["addr"].value
@@ -58,7 +58,7 @@ def xmlparse_nmap(xmldoc):
 
 # Parse servicescan XML file
 def xmlparse_servicescan(xmldoc):
-    hostlist = xmldoc.getElementsByTagName("host") 
+    hostlist = xmldoc.getElementsByTagName("host")
     for hostNode in hostlist :
         host = hostNode.attributes["address"].value
         portlist = hostNode.getElementsByTagName("port")
