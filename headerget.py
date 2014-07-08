@@ -10,6 +10,7 @@ import os
 import requests
 import sys
 
+# Open target file
 targets = {}
 try:
     with open(sys.argv[1]) as f:
@@ -18,11 +19,13 @@ except:
     print("\nUsage: $ " + sys.argv[0] + " <targetfile>\n")
     sys.exit(1)
 
+# Parse targets (txt)
 for line in lines:
     if not line.startswith('http'):
         line = "http://" + line
     targets[line.rstrip()] = ""
 
+# Get boring headers
 try:
     path = os.path.dirname(os.path.realpath(__file__)) + "/boringheaders.txt"
     boringheaders = open(path).read().splitlines()
@@ -30,7 +33,7 @@ except IOError:
     print("File boringheaders.txt not found")
     sys.exit(1)
 
-
+# The main scan
 for target in targets:
     if sys.stdout.isatty():
         sys.stdout.write(target + "                                        \r")
@@ -47,17 +50,19 @@ for target in targets:
         if header.lower() not in boringheaders:
             targets[target] += header + ": " + r.headers[header] + "\n"
 
-# Get rid of any trailing characters
+# Get rid of any trailing characters on the TTY
 if sys.stdout.isatty():
     sys.stdout.write("                                                         \r")
     sys.stdout.flush()
 
+# Reverse the array and sort it by headers
 sorted = {}
 for k, v in targets.items ():
     if v not in sorted:
         sorted [v] = []
     sorted [v].append (k)
 
+# Print output
 for headers,servers in sorted.items():
    if not headers:
        continue
