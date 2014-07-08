@@ -59,6 +59,8 @@ for k, v in targets.items ():
     sorted [v].append (k)
 
 for headers,servers in sorted.items():
+   if not headers:
+       continue
    for server in servers:
         print(server)
    print(headers)
