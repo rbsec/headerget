@@ -9,6 +9,49 @@
 import os
 import requests
 import sys
+from xml.dom import minidom
+
+# Parse the targets (xml)
+def xmlparse ():
+    xmldoc = minidom.parse(sys.argv[1])
+    hostlist = xmldoc.getElementsByTagName("host") 
+    for hostNode in hostlist :
+        addressNode = hostNode.getElementsByTagName("address")
+        host = addressNode[0].attributes["addr"].value
+        ports = hostNode.getElementsByTagName("ports")
+        portlist = ports[0].getElementsByTagName("port")
+        for portNode in portlist:
+            port = portNode.attributes["portid"].value
+            stateNode = portNode.getElementsByTagName("state")
+            state = stateNode[0].attributes["state"].value
+            serviceNode = portNode.getElementsByTagName("service")
+            service = serviceNode[0].attributes["name"].value
+            try:
+                tunnel = serviceNode[0].attributes["tunnel"].value
+            except:
+                tunnel = ""
+            
+            if state == "open" and service == "http" and port == "80" and tunnel == "":
+                target = "http://" + host
+            elif state == "open" and service == "http" and tunnel == "":
+                target = "http://" + host + ":" + port
+            elif state == "open" and service == "http" and port == "443" and tunnel == "ssl":
+                target = "https://" + host
+            elif state == "open" and service == "http" and tunnel == "ssl":
+                target = "https://" + host + ":" + port
+            # If we don't have service info, just catch http/https based on port
+            elif state == "open" and port == "80":
+                target = "http://" + host
+            elif state == "open"  and port == 443:
+                target = "https://" + host
+            targets[target] = ""
+
+# Parse targets (txt)
+def txtparse():
+    for line in lines:
+        if not line.startswith('http'):
+            line = "http://" + line
+        targets[line.rstrip()] = ""
 
 # Open target file
 targets = {}
@@ -19,11 +62,11 @@ except:
     print("\nUsage: $ " + sys.argv[0] + " <targetfile>\n")
     sys.exit(1)
 
-# Parse targets (txt)
-for line in lines:
-    if not line.startswith('http'):
-        line = "http://" + line
-    targets[line.rstrip()] = ""
+# Parse the file based on extension
+if sys.argv[1].endswith("xml"):
+    xmlparse()
+else:
+    txtparse()
 
 # Get boring headers
 try:
