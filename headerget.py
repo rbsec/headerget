@@ -9,6 +9,7 @@
 #
 
 import os
+import platform
 import requests
 import sys
 from xml.dom import minidom
@@ -114,5 +115,8 @@ for headers,servers in sorted.items():
    if not headers:
        continue
    for server in servers:
-        print(server)
+        if sys.stdout.isatty() and platform.system() != "Windows":
+            print('\033[94m' + server + '\033[0m')
+        else:
+            print(server)
    print(headers)
