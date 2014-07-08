@@ -14,9 +14,8 @@ import requests
 import sys
 from xml.dom import minidom
 
-# Parse the targets (xml)
-def xmlparse ():
-    xmldoc = minidom.parse(sys.argv[1])
+# Parse Nmap XML file
+def xmlparse_nmap(xmldoc):
     hostlist = xmldoc.getElementsByTagName("host") 
     for hostNode in hostlist :
         addressNode = hostNode.getElementsByTagName("address")
@@ -24,6 +23,10 @@ def xmlparse ():
         ports = hostNode.getElementsByTagName("ports")
         portlist = ports[0].getElementsByTagName("port")
         for portNode in portlist:
+            protocol = portNode.attributes["protocol"].value
+            # Only interested in TCP
+            if protocol != "tcp":
+                continue
             port = portNode.attributes["portid"].value
             stateNode = portNode.getElementsByTagName("state")
             state = stateNode[0].attributes["state"].value
@@ -33,7 +36,7 @@ def xmlparse ():
                 tunnel = serviceNode[0].attributes["tunnel"].value
             except:
                 tunnel = ""
-            
+
             if state == "open" and service == "http" and port == "80" and tunnel == "":
                 target = "http://" + host
             elif state == "open" and service == "http" and tunnel == "":
@@ -47,7 +50,50 @@ def xmlparse ():
                 target = "http://" + host
             elif state == "open"  and port == 443:
                 target = "https://" + host
-            targets[target] = ""
+
+            try:
+                targets[target] = ""
+            except UnboundLocalError:
+                pass
+
+# Parse servicescan XML file
+def xmlparse_servicescan(xmldoc):
+    hostlist = xmldoc.getElementsByTagName("host") 
+    for hostNode in hostlist :
+        host = hostNode.attributes["address"].value
+        portlist = hostNode.getElementsByTagName("port")
+        for portNode in portlist:
+            protocol = portNode.attributes["protocol"].value
+            # Only interested in TCP
+            if protocol != "TCP":
+                continue
+            port = portNode.attributes["number"].value
+            state = portNode.attributes["state"].value
+            desc = portNode.attributes["description"].value
+            if state == "open" and desc == "HTTP" and port == "80":
+                target = "http://" + host
+            elif state == "open" and (desc == "HTTP" or desc == "HTTP-ALT"):
+                target = "http://" + host + ":" + port
+            elif state == "open" and desc == "HTTPS" and port == "443":
+                target = "https://" + host
+            elif state == "open" and desc == "HTTPS":
+                target = "https://" + host + ":" + port
+
+            try:
+                targets[target] = ""
+            except UnboundLocalError:
+                pass
+
+# Parse targets (xml)
+def xmlparse ():
+    xmldoc = minidom.parse(sys.argv[1])
+    if xmldoc.getElementsByTagName("nmaprun"):
+        xmlparse_nmap(xmldoc)
+    elif xmldoc.getElementsByTagName("servicescan"):
+        xmlparse_servicescan(xmldoc)
+    else:
+        print("Invalid XML file")
+        sys.exit(1)
 
 # Parse targets (txt)
 def txtparse():
@@ -65,13 +111,13 @@ except:
     print("\nUsage: $ " + sys.argv[0] + " <targetfile>\n")
     sys.exit(1)
 
-# Parse the file based on extension
+# Parse the targets file based on extension
 if sys.argv[1].endswith("xml"):
     xmlparse()
 else:
     txtparse()
 
-# Get boring headers
+# Get list of boring headers
 try:
     path = os.path.dirname(os.path.realpath(__file__)) + "/boringheaders.txt"
     boringheaders = open(path).read().splitlines()
