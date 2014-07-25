@@ -17,9 +17,6 @@ import sys
 from xml.dom import minidom
 
 
-def trunc(string):
-    return (string[:75] + '[...]') if len(string) > 80 else string
-
 # Parse Nmap XML file
 def xmlparse_nmap(xmldoc):
     hostlist = xmldoc.getElementsByTagName("host")
@@ -108,36 +105,19 @@ def txtparse():
             line = "http://" + line
         targets[line.rstrip()] = ""
 
-# Get targets
-targets = {}
-try:
-    arg = sys.argv[1]
-except:
-    print("\nUsage: $ " + sys.argv[1] + " <targetfile or domain>\n")
-    sys.exit(1)
-if arg.startswith("http"):
-    targets[arg] = ""
-else:
-    try:
-        with open(sys.argv[1]) as f:
-            lines = f.readlines()
-    except:
-        print("\nCould not open file " + arg)
-        sys.exit(1)
+# Reverse a dictionary
+def reverse_dict(dictionary):
+    sorted = {}
+    for k, v in dictionary.items ():
+        if v:
+            if v not in sorted:
+                sorted [v] = []
+            sorted [v].append (k)
+    return sorted
 
-# Parse the targets file based on extension
-    if sys.argv[1].endswith("xml"):
-        xmlparse()
-    else:
-        txtparse()
-
-# Get list of boring headers
-try:
-    path = os.path.dirname(os.path.realpath(__file__)) + "/boringheaders.txt"
-    boringheaders = open(path).read().splitlines()
-except IOError:
-    print("File boringheaders.txt not found")
-    sys.exit(1)
+# Truncate a string to 80 chars
+def trunc(string):
+    return (string[:75] + '[...]') if len(string) > 80 else string
 
 # Check for missing/bad security headers
 def check_security_headers(target, headers):
@@ -186,7 +166,56 @@ def check_security_headers(target, headers):
         missingsecurity[target] += "content-security-policy\n"
 
 
-# The main scan
+# Print the headers
+def print_headers(headerarray):
+    for headers,servers in headerarray.items():
+       if not headers:
+           continue
+       for server in servers:
+            if sys.stdout.isatty() and platform.system() != "Windows":
+                print('\033[94m' + server + '\033[0m')
+            else:
+                print(server)
+       print(headers)
+
+
+########
+# Main #
+########
+
+# Get targets
+targets = {}
+try:
+    arg = sys.argv[1]
+except:
+    print("\nUsage: $ " + sys.argv[1] + " <targetfile or domain>\n")
+    sys.exit(1)
+if arg.startswith("http"):
+    targets[arg] = ""
+else:
+    try:
+        with open(sys.argv[1]) as f:
+            lines = f.readlines()
+    except:
+        print("\nCould not open file " + arg)
+        sys.exit(1)
+
+# Parse the targets file based on extension
+    if sys.argv[1].endswith("xml"):
+        xmlparse()
+    else:
+        txtparse()
+
+# Get list of boring headers
+try:
+    path = os.path.dirname(os.path.realpath(__file__)) + "/boringheaders.txt"
+    boringheaders = open(path).read().splitlines()
+except IOError:
+    print("File boringheaders.txt not found")
+    sys.exit(1)
+
+
+# Scan the servers
 headersfound = targets.copy()
 missingsecurity = targets.copy()
 badheaders = targets.copy()
@@ -215,63 +244,21 @@ if sys.stdout.isatty():
     sys.stdout.write("                                                         \r")
     sys.stdout.flush()
 
-#
+
 # Interesting Headers
-#
-sorted = {}
-for k, v in headersfound.items ():
-    if v not in sorted:
-        sorted [v] = []
-    sorted [v].append (k)
+sorted = reverse_dict(headersfound)
+if len(sorted) > 0:
+    print('\033[92mInteresting Headers\033[0m')
+    print_headers(sorted)
 
-print('\033[92mInteresting Headers\033[0m')
-for headers,servers in sorted.items():
-   if not headers:
-       continue
-   for server in servers:
-        if sys.stdout.isatty() and platform.system() != "Windows":
-            print('\033[94m' + server + '\033[0m')
-        else:
-            print(server)
-   print(headers)
-
-
-#
 # Missing security headers
-#
-sorted = {}
-for k, v in missingsecurity.items ():
-    if v not in sorted:
-        sorted [v] = []
-    sorted [v].append (k)
+sorted = reverse_dict(missingsecurity)
+if len(sorted) > 0:
+    print('\n\033[33mMissing Security Headers\033[0m')
+    print_headers(sorted)
 
-print('\n\033[33mMissing Security Headers\033[0m')
-for secheaders,servers in sorted.items():
-    if not secheaders:
-        continue
-    for server in servers:
-        if sys.stdout.isatty() and platform.system() != "Windows":
-            print('\033[94m' + server + '\033[0m')
-        else:
-            print(server)
-    print(secheaders)
-
-#
 # Bad security headers
-#
-sorted = {}
-for k, v in badheaders.items ():
-    if v not in sorted:
-        sorted [v] = []
-    sorted [v].append (k)
-
-print('\n\033[91mBad Security Headers\033[0m')
-for secheaders,servers in sorted.items():
-    if not secheaders:
-        continue
-    for server in servers:
-        if sys.stdout.isatty() and platform.system() != "Windows":
-            print('\033[94m' + server + '\033[0m')
-        else:
-            print(server)
-    print(secheaders)
+sorted = reverse_dict(badheaders)
+if len(sorted) > 0:
+    print('\n\033[91mBad Security Headers\033[0m')
+    print_headers(sorted)
