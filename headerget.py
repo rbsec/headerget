@@ -6,10 +6,12 @@
 # Usage: $ ./headerget.py <targetfile>
 # Target file can be nmap or servicescan XML output (use service detection with XML)
 # Otherwise target file can be plain text, with one target per line
+# Missing or misconfigured security headers are also listed
 #
 
 import os
 import platform
+import re
 import requests
 import sys
 from xml.dom import minidom
@@ -125,8 +127,57 @@ except IOError:
     print("File boringheaders.txt not found")
     sys.exit(1)
 
+# Check for missing/bad security headers
+def check_security_headers(target, headers):
+    # X-Frame-Options
+    try:
+        m = re.search("SAMEORIGIN|DENY", headers["x-frame-options"], re.IGNORECASE)
+        if not m:
+            missingsecurity[target] += "x-frame-options\n"
+    except Exception as e:
+        missingsecurity[target] += "x-frame-options\n"
+
+    # X-Content-Type-Options: nosniff
+    try:
+        m = re.search("nosniff", headers["x-content-type-options"], re.IGNORECASE)
+        if not m:
+            missingsecurity[target] += "x-content-type-options\n"
+    except:
+        missingsecurity[target] += "x-content-type-options\n"
+
+    # X-XSS-Protection
+    try:
+        m = re.search("0", headers["x-xss-protection"], re.IGNORECASE)
+        if m:
+            missingsecurity[target] += "x-xss-protection\n"
+    except:
+        pass
+
+    # Strict-Transport-Security (HSTS)
+    try:
+        m = re.search("1", headers["strict-transport-security"], re.IGNORECASE)
+        if not m:
+            missingsecurity[target] += "strict-transport-security\n"
+    except:
+        missingsecurity[target] += "strict-transport-security\n"
+
+    # Access-Control-Allow-Origin (CORS)
+    try:
+        m = re.search("*", headers["access-control-allow-origin"], re.IGNORECASE)
+        if m:
+            missingsecurity[target] += "access-control-allow-origin\n"
+    except:
+        pass
+
+    # Content-Security-Policy
+    if not ("content-security-policy" in headers or "x-content-security-policy" in headers or "x-webkit-csp" in headers):
+        missingsecurity[target] += "content-security-policy\n"
+
+
 # The main scan
-for target in targets:
+headersfound = targets.copy()
+missingsecurity = targets.copy()
+for target in headersfound:
     if sys.stdout.isatty():
         sys.stdout.write(target + "                                        \r")
         sys.stdout.flush()
@@ -142,7 +193,8 @@ for target in targets:
 
     for header in r.headers:
         if header.lower() not in boringheaders:
-            targets[target] += header + ": " + r.headers[header] + "\n"
+            headersfound[target] += header + ": " + r.headers[header] + "\n"
+    check_security_headers(target, r.headers)
 
 # Get rid of any trailing characters on the TTY
 if sys.stdout.isatty():
@@ -151,12 +203,13 @@ if sys.stdout.isatty():
 
 # Reverse the array and sort it by headers
 sorted = {}
-for k, v in targets.items ():
+for k, v in headersfound.items ():
     if v not in sorted:
         sorted [v] = []
     sorted [v].append (k)
 
-# Print output
+# Print interesting header output
+print('\033[92mInteresting Headers\033[0m')
 for headers,servers in sorted.items():
    if not headers:
        continue
@@ -166,3 +219,22 @@ for headers,servers in sorted.items():
         else:
             print(server)
    print(headers)
+
+
+# Reverse the array and sort it by headers
+secsorted = {}
+for k, v in missingsecurity.items ():
+    if v not in secsorted:
+        secsorted [v] = []
+    secsorted [v].append (k)
+
+print('\n\033[92mMissing or Incorrect Security Headers\033[0m')
+for secheaders,servers in secsorted.items():
+    if not secheaders:
+        continue
+    for server in servers:
+        if sys.stdout.isatty() and platform.system() != "Windows":
+            print('\033[94m' + server + '\033[0m')
+        else:
+            print(server)
+    print(secheaders)
