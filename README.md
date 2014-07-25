@@ -13,4 +13,4 @@ Otherwise target is assumed to be plain text, with one host per line (protocol i
 
 Usage
 =====
-$ headerget.py \<targetlist\>
+$ headerget.py \<targetfile or domain\>

@@ -3,7 +3,7 @@
 # Take a list of websites and scan them for any version headers
 # Common headers are ignored, so only version or interesting ones are shown
 # Sites with the same headers are merged in the output
-# Usage: $ ./headerget.py <targetfile>
+# Usage: $ ./headerget.py <targetfile or domain>
 # Target file can be nmap or servicescan XML output (use service detection with XML)
 # Otherwise target file can be plain text, with one target per line
 # Missing or misconfigured security headers are also listed
@@ -104,20 +104,28 @@ def txtparse():
             line = "http://" + line
         targets[line.rstrip()] = ""
 
-# Open target file
+# Get targets
 targets = {}
 try:
-    with open(sys.argv[1]) as f:
-        lines = f.readlines()
+    arg = sys.argv[1]
 except:
-    print("\nUsage: $ " + sys.argv[0] + " <targetfile>\n")
+    print("\nUsage: $ " + sys.argv[1] + " <targetfile or domain>\n")
     sys.exit(1)
+if arg.startswith("http"):
+    targets[arg] = ""
+else:
+    try:
+        with open(sys.argv[1]) as f:
+            lines = f.readlines()
+    except:
+        print("\nCould not open file " + arg)
+        sys.exit(1)
 
 # Parse the targets file based on extension
-if sys.argv[1].endswith("xml"):
-    xmlparse()
-else:
-    txtparse()
+    if sys.argv[1].endswith("xml"):
+        xmlparse()
+    else:
+        txtparse()
 
 # Get list of boring headers
 try:
