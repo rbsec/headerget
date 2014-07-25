@@ -201,7 +201,8 @@ for target in headersfound:
 
     for header in r.headers:
         if header.lower() not in boringheaders:
-            headersfound[target] += header + ": " + r.headers[header] + "\n"
+            h = (r.headers[header][:75] + '[...]') if len(r.headers[header]) > 80 else r.headers[header]
+            headersfound[target] += header + ": " + h + "\n"
     check_security_headers(target, r.headers)
 
 # Get rid of any trailing characters on the TTY

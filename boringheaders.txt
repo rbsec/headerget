@@ -14,7 +14,6 @@ content-length
 content-location
 content-md5
 content-range
-content-security-policy
 content-type
 dasl
 date
@@ -70,7 +69,6 @@ x-auto-login
 x-cache
 x-cache-hits
 x-cnection
-x-content-security-policy
 x-content-type-options
 x-drupal-cache
 x-frame-options
@@ -88,7 +86,6 @@ x-rs-time
 x-ua-compatible
 x-varnish
 x-varnish-cache
-x-webkit-csp
 x-xrds-location
 x-xss-protection
 xmlns
