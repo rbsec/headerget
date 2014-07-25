@@ -16,6 +16,10 @@ import requests
 import sys
 from xml.dom import minidom
 
+
+def trunc(string):
+    return (string[:75] + '[...]') if len(string) > 80 else string
+
 # Parse Nmap XML file
 def xmlparse_nmap(xmldoc):
     hostlist = xmldoc.getElementsByTagName("host")
@@ -141,7 +145,7 @@ def check_security_headers(target, headers):
     try:
         m = re.search("SAMEORIGIN|DENY", headers["x-frame-options"], re.IGNORECASE)
         if not m:
-            missingsecurity[target] += "x-frame-options\n"
+            badheaders[target] += "x-frame-options: " + trunc(headers["x-frame-options"]) +"\n"
     except Exception as e:
         missingsecurity[target] += "x-frame-options\n"
 
@@ -157,7 +161,7 @@ def check_security_headers(target, headers):
     try:
         m = re.search("0", headers["x-xss-protection"], re.IGNORECASE)
         if m:
-            missingsecurity[target] += "x-xss-protection\n"
+            badheaders[target] += "x-xss-protection: " + trunc(headers["x-xss-protection"]) + "\n"
     except:
         pass
 
@@ -165,15 +169,15 @@ def check_security_headers(target, headers):
     try:
         m = re.search("1", headers["strict-transport-security"], re.IGNORECASE)
         if not m:
-            missingsecurity[target] += "strict-transport-security\n"
+            badheaders[target] += "strict-transport-security: " + trunc(headers["strict-transport-security"]) +"\n"
     except:
         missingsecurity[target] += "strict-transport-security\n"
 
     # Access-Control-Allow-Origin (CORS)
     try:
-        m = re.search("*", headers["access-control-allow-origin"], re.IGNORECASE)
+        m = re.search("\*", headers["access-control-allow-origin"], re.IGNORECASE)
         if m:
-            missingsecurity[target] += "access-control-allow-origin\n"
+            badheaders[target] += "access-control-allow-origin: " + trunc(headers["access-control-allow-origin"]) +"\n"
     except:
         pass
 
@@ -185,6 +189,7 @@ def check_security_headers(target, headers):
 # The main scan
 headersfound = targets.copy()
 missingsecurity = targets.copy()
+badheaders = targets.copy()
 for target in headersfound:
     if sys.stdout.isatty():
         sys.stdout.write(target + "                                        \r")
@@ -210,14 +215,15 @@ if sys.stdout.isatty():
     sys.stdout.write("                                                         \r")
     sys.stdout.flush()
 
-# Reverse the array and sort it by headers
+#
+# Interesting Headers
+#
 sorted = {}
 for k, v in headersfound.items ():
     if v not in sorted:
         sorted [v] = []
     sorted [v].append (k)
 
-# Print interesting header output
 print('\033[92mInteresting Headers\033[0m')
 for headers,servers in sorted.items():
    if not headers:
@@ -230,15 +236,37 @@ for headers,servers in sorted.items():
    print(headers)
 
 
-# Reverse the array and sort it by headers
-secsorted = {}
+#
+# Missing security headers
+#
+sorted = {}
 for k, v in missingsecurity.items ():
-    if v not in secsorted:
-        secsorted [v] = []
-    secsorted [v].append (k)
+    if v not in sorted:
+        sorted [v] = []
+    sorted [v].append (k)
 
-print('\n\033[92mMissing or Incorrect Security Headers\033[0m')
-for secheaders,servers in secsorted.items():
+print('\n\033[33mMissing Security Headers\033[0m')
+for secheaders,servers in sorted.items():
+    if not secheaders:
+        continue
+    for server in servers:
+        if sys.stdout.isatty() and platform.system() != "Windows":
+            print('\033[94m' + server + '\033[0m')
+        else:
+            print(server)
+    print(secheaders)
+
+#
+# Bad security headers
+#
+sorted = {}
+for k, v in badheaders.items ():
+    if v not in sorted:
+        sorted [v] = []
+    sorted [v].append (k)
+
+print('\n\033[91mBad Security Headers\033[0m')
+for secheaders,servers in sorted.items():
     if not secheaders:
         continue
     for server in servers:
