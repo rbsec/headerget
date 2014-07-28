@@ -188,7 +188,7 @@ targets = {}
 try:
     arg = sys.argv[1]
 except:
-    print("\nUsage: $ " + sys.argv[1] + " <targetfile or domain>\n")
+    print("\nUsage: $ " + sys.argv[0] + " <targetfile or domain>\n")
     sys.exit(1)
 if arg.startswith("http"):
     targets[arg] = ""
