@@ -209,7 +209,11 @@ else:
 # Get list of boring headers
 try:
     path = os.path.dirname(os.path.realpath(__file__)) + "/boringheaders.txt"
-    boringheaders = open(path).read().splitlines()
+    boringheaders = []
+    with open(path, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            boringheaders.append(line.rstrip().lower())
 except IOError:
     print("File boringheaders.txt not found")
     sys.exit(1)
