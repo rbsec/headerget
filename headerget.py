@@ -133,7 +133,7 @@ def check_security_headers(target, headers):
     try:
         m = re.search("nosniff", headers["x-content-type-options"], re.IGNORECASE)
         if not m:
-            missingsecurity[target] += "x-content-type-options\n"
+            badheaders[target] += "x-content-type-options\n"
     except:
         missingsecurity[target] += "x-content-type-options\n"
 
