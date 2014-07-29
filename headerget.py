@@ -147,8 +147,8 @@ def check_security_headers(target, headers):
 
     # Strict-Transport-Security (HSTS)
     try:
-        m = re.search("1", headers["strict-transport-security"], re.IGNORECASE)
-        if not m:
+        m = re.search("max-age=(\d+)", headers["strict-transport-security"], re.IGNORECASE)
+        if int(m.group(1)) < (60*60*24 * 30):     # Flag if less than 30 days
             badheaders[target] += "strict-transport-security: " + trunc(headers["strict-transport-security"]) +"\n"
     except:
         missingsecurity[target] += "strict-transport-security\n"
