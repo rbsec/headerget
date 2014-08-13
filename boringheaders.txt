@@ -47,6 +47,7 @@ proxy-connection
 public
 range
 referer
+refresh
 resin-trace
 retry-after
 rlogid
@@ -71,6 +72,7 @@ x-cache-hits
 x-cnection
 x-content-type-options
 x-drupal-cache
+x-fb-debug
 x-frame-options
 x-fs-uuid
 x-id
