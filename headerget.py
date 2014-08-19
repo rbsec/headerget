@@ -190,6 +190,11 @@ try:
 except:
     print("\nUsage: $ " + sys.argv[0] + " <targetfile or domain>\n")
     sys.exit(1)
+
+if arg == "-h" or arg == "--help":
+    print("\nUsage: $ " + sys.argv[0] + " <targetfile or domain>\n")
+    sys.exit(1)
+
 if arg.startswith("http"):
     targets[arg] = ""
 else:
