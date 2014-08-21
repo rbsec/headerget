@@ -6,6 +6,7 @@ alternate-protocol
 alternates
 authorization
 cache-control
+cf-ray
 cneonction
 connection
 content-encoding
