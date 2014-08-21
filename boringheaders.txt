@@ -69,6 +69,7 @@ x-amz-id-2
 x-auto-login
 x-cache
 x-cache-hits
+x-cacheable
 x-cnection
 x-content-type-options
 x-drupal-cache
@@ -83,11 +84,14 @@ x-msedge-ref
 x-nc
 x-pad
 x-pingback
+x-rack-cache
+x-request-id
 x-rs-ops
 x-rs-time
 x-ua-compatible
 x-varnish
 x-varnish-cache
+x-xhr-current-location
 x-xrds-location
 x-xss-protection
 xmlns
