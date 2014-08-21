@@ -16,6 +16,20 @@ import requests
 import sys
 from xml.dom import minidom
 
+class col:
+    if sys.stdout.isatty() and platform.system() != "Windows":
+        green = '\033[32m'
+        blue = '\033[94m'
+        red = '\033[31m'
+        brown = '\033[33m'
+        end = '\033[0m'
+    else:   # Colours mess up redirected output, disable them
+        green = ""
+        blue = ""
+        red = ""
+        brown = ""
+        end = ""
+
 
 # Parse Nmap XML file
 def xmlparse_nmap(xmldoc):
@@ -95,7 +109,7 @@ def xmlparse ():
     elif xmldoc.getElementsByTagName("servicescan"):
         xmlparse_servicescan(xmldoc)
     else:
-        print("Invalid XML file")
+        print(col.red + "Invalid XML file" + col.end)
         sys.exit(1)
 
 # Parse targets (txt)
@@ -172,10 +186,7 @@ def print_headers(headerarray):
        if not headers:
            continue
        for server in servers:
-            if sys.stdout.isatty() and platform.system() != "Windows":
-                print('\033[94m' + server + '\033[0m')
-            else:
-                print(server)
+           print(col.blue + server + col.end)
        print(headers)
 
 
@@ -257,17 +268,17 @@ if sys.stdout.isatty():
 # Interesting Headers
 sorted = reverse_dict(headersfound)
 if len(sorted) > 0:
-    print('\033[92mInteresting Headers\033[0m')
+    print(col.green + 'Interesting Headers' + col.end)
     print_headers(sorted)
 
 # Missing security headers
 sorted = reverse_dict(missingsecurity)
 if len(sorted) > 0:
-    print('\n\033[33mMissing Security Headers\033[0m')
+    print('\n' + col.brown + 'Missing Security Headers' + col.end)
     print_headers(sorted)
 
 # Bad security headers
 sorted = reverse_dict(badheaders)
 if len(sorted) > 0:
-    print('\n\033[91mBad Security Headers\033[0m')
+    print('\n' + col.red + 'Bad Security Headers' + col.end)
     print_headers(sorted)
