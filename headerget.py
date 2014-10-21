@@ -38,7 +38,10 @@ def xmlparse_nmap(xmldoc):
         addressNode = hostNode.getElementsByTagName("address")
         host = addressNode[0].attributes["addr"].value
         ports = hostNode.getElementsByTagName("ports")
-        portlist = ports[0].getElementsByTagName("port")
+        try:
+            portlist = ports[0].getElementsByTagName("port")
+        except:
+            continue
         for portNode in portlist:
             protocol = portNode.attributes["protocol"].value
             # Only interested in TCP
@@ -48,7 +51,10 @@ def xmlparse_nmap(xmldoc):
             stateNode = portNode.getElementsByTagName("state")
             state = stateNode[0].attributes["state"].value
             serviceNode = portNode.getElementsByTagName("service")
-            service = serviceNode[0].attributes["name"].value
+            try:
+                service = serviceNode[0].attributes["name"].value
+            except:
+                continue
             try:
                 tunnel = serviceNode[0].attributes["tunnel"].value
             except:
