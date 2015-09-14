@@ -200,6 +200,9 @@ def print_headers(headerarray):
 # Main #
 ########
 
+# Supress warnings that we're not validating certificates
+requests.packages.urllib3.disable_warnings()
+
 # Get targets
 targets = {}
 try:
