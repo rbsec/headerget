@@ -255,11 +255,14 @@ for target in headersfound:
     try:
         # Timeout after 2 seconds, don't try and verify the SSL cert
         r = requests.head(target, timeout=2, verify=False)
+    except requests.exceptions.RequestException:
+        r = requests.get(target, timeout=2, verify=False)
     except KeyboardInterrupt:
         print("\n\nCaught KeyboardInterrupt, quitting...")
         print("Results so far:\n")
         break
-    except:
+    except Exception as ex:
+        print(ex)
         continue
 
     for header in r.headers:
