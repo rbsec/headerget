@@ -14,7 +14,9 @@ import platform
 import re
 import requests
 import sys
+import traceback
 from xml.dom import minidom
+import OpenSSL
 
 class col:
     if sys.stdout.isatty() and platform.system() != "Windows":
@@ -255,14 +257,24 @@ for target in headersfound:
     try:
         # Timeout after 2 seconds, don't try and verify the SSL cert
         r = requests.head(target, timeout=2, verify=False)
+
+    except requests.exceptions.ReadTimeout:
+        print(col.red + target + " timed out" + col.end)
+        continue
+    except requests.exceptions.SSLError:
+        print(col.red + target + " SSL error" + col.end)
+        continue
+    except OpenSSL.SSL.ZeroReturnError:
+        print(col.red + target + " empty response" + col.end)
+        continue
     except requests.exceptions.RequestException:
         r = requests.get(target, timeout=2, verify=False)
     except KeyboardInterrupt:
         print("\n\nCaught KeyboardInterrupt, quitting...")
         print("Results so far:\n")
         break
-    except Exception as ex:
-        print(ex)
+    except Exception:
+        print(traceback.format_exc())
         continue
 
     for header in r.headers:
