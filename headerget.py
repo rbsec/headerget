@@ -257,8 +257,16 @@ for target in headersfound:
     try:
         # Timeout after 2 seconds, don't try and verify the SSL cert
         r = requests.head(target, timeout=2, verify=False)
-
+    except requests.exceptions.RequestException:
+        try:
+            print("HEAD failed, trying GET")
+            r = requests.get(target, timeout=2, verify=False)
+        except Exception as e:
+            continue
     except requests.exceptions.ReadTimeout:
+        print(col.red + target + " timed out" + col.end)
+        continue
+    except requests.exceptions.ConnectTimeout:
         print(col.red + target + " timed out" + col.end)
         continue
     except requests.exceptions.SSLError:
@@ -267,13 +275,11 @@ for target in headersfound:
     except OpenSSL.SSL.ZeroReturnError:
         print(col.red + target + " empty response" + col.end)
         continue
-    except requests.exceptions.RequestException:
-        r = requests.get(target, timeout=2, verify=False)
     except KeyboardInterrupt:
         print("\n\nCaught KeyboardInterrupt, quitting...")
         print("Results so far:\n")
         break
-    except Exception:
+    except:
         print(traceback.format_exc())
         continue
 
