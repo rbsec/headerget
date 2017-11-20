@@ -204,6 +204,8 @@ def print_headers(headerarray):
 
 # Supress warnings that we're not validating certificates
 requests.packages.urllib3.disable_warnings()
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Get targets
 targets = {}
